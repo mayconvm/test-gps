@@ -1,7 +1,11 @@
 package com.test.app.gps;
 
+import android.content.ComponentName;
 import android.content.ContentValues;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.Gravity;
 import android.widget.ArrayAdapter;
@@ -23,6 +27,8 @@ import android.view.MenuItem;
 import com.test.app.gps.Database.DatabaseHandler;
 import com.test.app.gps.Entity.InterfaceEntity;
 import com.test.app.gps.Entity.LocationEntity;
+import com.test.app.gps.Service.GpsRequest;
+import com.test.app.gps.Service.LocalWordService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +38,8 @@ public class MainActivity extends AppCompatActivity
 
     Button btnShowLocation;
     GPSTracker gps;
+    GpsRequest serviceGps;
+    LocalWordService s;
 
 
     @Override
@@ -59,11 +67,38 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        ListView listL = (ListView) findViewById(R.id.listLocation);
 
+        //linst invisible
+        ListView listL = (ListView) findViewById(R.id.listLocation);
         listL.setVisibility(View.INVISIBLE);
 
+        // use this to start and trigger a service
+        Intent i = new Intent(this, GpsRequest.class);
+        // potentially add data to the intent
+        i.putExtra("KEY1", "Value to be used by the service");
+        this.startService(i);
+
+        bindService(i, mConnection, this.BIND_AUTO_CREATE);
+
+        Log.d("Activy:onCreate", "Start service");
+
     }
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+
+        public void onServiceConnected(ComponentName className,
+                                       IBinder binder) {
+            LocalWordService.MyBinder b = (LocalWordService.MyBinder) binder;
+
+            //s = b.getService();
+            Toast.makeText(MainActivity.this, "Connected", Toast.LENGTH_SHORT)
+                    .show();
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            s = null;
+        }
+    };
 
     @Override
     public void onBackPressed() {
@@ -89,11 +124,6 @@ public class MainActivity extends AppCompatActivity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
         if (id == R.id.countIds) {
             DatabaseHandler db = new DatabaseHandler(this);
 
@@ -102,6 +132,8 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.listText) {
             TextView text = (TextView) findViewById(R.id.textLocation);
+            text.setText("");
+
             DatabaseHandler db = new DatabaseHandler(this);
             List<LocationEntity> listLocation = db.getAll();
             int cnt = db.getCount();
@@ -111,8 +143,9 @@ public class MainActivity extends AppCompatActivity
                 LocationEntity entity = listLocation.get(i);
 
                 text.setText(text.getText() + "\n" + String.valueOf(entity.getValues().toString()));
-                Log.d("MENU:listText", "Text setting");
             }
+
+            Log.d("MENU:listText", "Text setting");
         }
 
 
@@ -162,6 +195,9 @@ public class MainActivity extends AppCompatActivity
                 double latitude = gps.getLatitude();
                 double longitude = gps.getLongitude();
 
+                //stop request position
+                gps.stopUsingGPS();
+
                 Toast.makeText(getApplicationContext(), "Your Location is - \nLat: " + latitude + "\nLong: " + longitude, Toast.LENGTH_LONG).show();
 
                 // new register
@@ -173,6 +209,11 @@ public class MainActivity extends AppCompatActivity
             } else {
                 gps.showSettingsAlert();
             }
+        }
+
+
+        if (id == R.id.initService) {
+
         }
 
         return super.onOptionsItemSelected(item);
