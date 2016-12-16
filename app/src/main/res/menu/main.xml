@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:title="CountIds"
+        android:id="@+id/countIds" />
+    <item android:title="List in text"
+        android:id="@+id/listText" />
+    <item android:title="Update List"
+        android:id="@+id/updateList" />
+    <item
+        android:title="GPS"
+        android:orderInCategory="100"
+        android:id="@+id/btnShowLocation" />
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="101"
+        android:title="@string/action_settings"
+        app:showAsAction="never" />
+</menu>
